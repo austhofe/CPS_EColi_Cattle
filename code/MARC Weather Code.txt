@@ -1,0 +1,35 @@
+**# Importing Daily Data from PRISM
+import excel "C:\Users\barrette\Documents\Work\CFPS Grant 2023_funded\Weather Data\MARC_Daily_weather.xlsx", sheet("PRISM_ppt_tmin_tmean_tmax_tdmea") firstrow
+gen month=month(Date)
+tab month, m
+gen year=year(Date)
+tab year
+save "C:\Users\barrette\Documents\Work\CFPS Grant 2023_funded\Weather Data\MARC_Daily.dta"
+clear
+
+**# Importing 30 year normal data from PRISM
+import excel "C:\Users\barrette\Documents\Work\CFPS Grant 2023_funded\Weather Data\MARC_30Year_weather.xlsx", sheet("PRISM_ppt_tmin_tmean_tmax_tdmea") firstrow
+save "C:\Users\barrette\Documents\Work\CFPS Grant 2023_funded\Weather Data\MARC_30Year.dta"
+clear
+
+**# Merging Daily and 30 year data from PRISM
+use "C:\Users\barrette\Documents\Work\CFPS Grant 2023_funded\Weather Data\MARC_Daily.dta"
+merge m:m month using "C:\Users\barrette\Documents\Work\CFPS Grant 2023_funded\Weather Data\MARC_30Year.dta"
+
+**# Generating 95th and 99th percentile variables based on precipitation (in inches)
+summarize pptinches, detail
+gen ppt95= pptinches if pptinches>=.48
+gen ppt99= pptinches if pptinches>=1.29
+gen ppt_1inch= pptinches if pptinches>=1
+
+**# Generating 95th and 99th percentile variables based on temp (in F)
+summarize tmaxdegreesF, detail
+gen tmax95= tmaxdegreesF if tmaxdegreesF >=92
+gen tmax99= tmaxdegreesF if tmaxdegreesF >=96.7
+
+**# Determine how many sampling opportunities we have from March to September by year to see if it's possible to use these metrics
+tab year if ppt95!=. & (month>=3 & month<=9)
+tab year if ppt99!=. & (month>=3 & month<=9)
+tab year if ppt_1inch!=. & (month>=3 & month<=9)
+tab year if tmax95 !=. & (month>=3 & month<=9)
+tab year if tmax99 !=. & (month>=3 & month<=9)
